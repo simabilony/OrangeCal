@@ -6,16 +6,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Translatable\HasTranslations;
 
 class UserMeal extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasTranslations;
+
+    public $translatable = ['name', 'description'];
 
     protected $fillable = [
         'user_id',
         'name',
-        'arabic_name',
-        'english_name',
         'description',
         'total_calories',
         'total_protein',
@@ -94,17 +95,11 @@ class UserMeal extends Model
         ]);
     }
 
-    public function getLocalizedName(string $locale = 'ar'): string
-    {
-        return $locale === 'en'
-            ? ($this->english_name ?? $this->name)
-            : ($this->arabic_name ?? $this->name);
-    }
-
     public function duplicate(): self
     {
         $newMeal = $this->replicate();
-        $newMeal->name = $this->name . ' (نسخة)';
+        $name = $this->getTranslation('name', 'ar');
+        $newMeal->setTranslation('name', 'ar', $name . ' (نسخة)');
         $newMeal->save();
 
         foreach ($this->ingredients as $ingredient) {

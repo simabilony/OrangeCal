@@ -55,21 +55,22 @@ class UserProfile extends Model
     public function calculateBMI(): float
     {
         if ($this->height && $this->weight) {
-            $heightInMeters = $this->height / 100;
-            return round($this->weight / ($heightInMeters * $heightInMeters), 2);
+            $heightInMeters = (float) $this->height / 100;
+            return round((float) $this->weight / ($heightInMeters * $heightInMeters), 2);
         }
-        return 0;
+        return 0.0;
     }
 
     public function updateBMI(): void
     {
-        $this->bmi = $this->calculateBMI();
+        $calculatedBMI = $this->calculateBMI();
+        $this->attributes['bmi'] = $calculatedBMI;
         $this->save();
     }
 
     public function calculateAge(): int
     {
-        return $this->birth_date ? $this->birth_date->age : 0;
+        return $this->birth_date ? \Carbon\Carbon::parse($this->birth_date)->age : 0;
     }
 
     public function getWeightToLose(): float

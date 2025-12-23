@@ -6,23 +6,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Spatie\Translatable\HasTranslations;
 
 class Notification extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTranslations;
 
     protected $keyType = 'string';
     public $incrementing = false;
+
+    public $translatable = ['title', 'body'];
 
     protected $fillable = [
         'user_id',
         'type',
         'title',
-        'ar_title',
-        'en_title',
         'body',
-        'ar_body',
-        'en_body',
         'data',
         'action_type',
         'action_value',
@@ -97,36 +96,38 @@ class Notification extends Model
         return !is_null($this->read_at);
     }
 
-    public function getLocalizedTitle(string $locale = 'ar'): string
-    {
-        return $locale === 'en'
-            ? ($this->en_title ?? $this->title)
-            : ($this->ar_title ?? $this->title);
-    }
-
-    public function getLocalizedBody(string $locale = 'ar'): string
-    {
-        return $locale === 'en'
-            ? ($this->en_body ?? $this->body)
-            : ($this->ar_body ?? $this->body);
-    }
-
     public static function sendToUser(User $user, array $data): self
     {
-        $notification = self::create([
+        $notification = new self([
             'user_id' => $user->id,
             'type' => $data['type'] ?? 'general',
-            'title' => $data['title'],
-            'ar_title' => $data['ar_title'] ?? null,
-            'en_title' => $data['en_title'] ?? null,
-            'body' => $data['body'],
-            'ar_body' => $data['ar_body'] ?? null,
-            'en_body' => $data['en_body'] ?? null,
             'data' => $data['data'] ?? null,
             'action_type' => $data['action_type'] ?? null,
             'action_value' => $data['action_value'] ?? null,
             'sent_at' => now(),
         ]);
+
+        if (isset($data['title'])) {
+            if (is_array($data['title'])) {
+                foreach ($data['title'] as $locale => $value) {
+                    $notification->setTranslation('title', $locale, $value);
+                }
+            } else {
+                $notification->title = $data['title'];
+            }
+        }
+
+        if (isset($data['body'])) {
+            if (is_array($data['body'])) {
+                foreach ($data['body'] as $locale => $value) {
+                    $notification->setTranslation('body', $locale, $value);
+                }
+            } else {
+                $notification->body = $data['body'];
+            }
+        }
+
+        $notification->save();
 
         // إرسال Push Notification إذا كان FCM token موجود
         if ($user->fcm_token && ($data['send_push'] ?? true)) {

@@ -6,16 +6,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Translatable\HasTranslations;
 
 class ExerciseLog extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasTranslations;
+
+    public $translatable = ['type'];
 
     protected $fillable = [
         'user_id',
         'type',
-        'ar_type',
-        'en_type',
         'description',
         'log_date',
         'start_time',
@@ -70,13 +71,6 @@ class ExerciseLog extends Model
     }
 
     // ==================== Helper Methods ====================
-
-    public function getLocalizedType(string $locale = 'ar'): string
-    {
-        return $locale === 'en'
-            ? ($this->en_type ?? $this->type)
-            : ($this->ar_type ?? $this->type);
-    }
 
     public function isFromAI(): bool
     {

@@ -5,16 +5,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Translatable\HasTranslations;
 
 class Subscription extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTranslations;
+
+    public $translatable = ['plan_name'];
 
     protected $fillable = [
         'user_id',
         'plan_name',
-        'ar_plan_name',
-        'en_plan_name',
         'plan_type',
         'price',
         'currency',
@@ -86,13 +87,6 @@ class Subscription extends Model
     public function daysRemaining(): int
     {
         return max(0, now()->diffInDays($this->ends_at, false));
-    }
-
-    public function getLocalizedPlanName(string $locale = 'ar'): string
-    {
-        return $locale === 'en'
-            ? ($this->en_plan_name ?? $this->plan_name)
-            : ($this->ar_plan_name ?? $this->plan_name);
     }
 
     public function cancel(): void

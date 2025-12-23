@@ -5,21 +5,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Translatable\HasTranslations;
+use App\Traits\CalculatesNutrition;
 
 class Food extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTranslations, CalculatesNutrition;
 
-    protected $table = 'foods';
+    protected $table = 'food';
+
+    public $translatable = ['name', 'description', 'category'];
 
     protected $fillable = [
         'name',
-        'arabic_name',
-        'english_name',
         'description',
         'category',
-        'ar_category',
-        'en_category',
         'barcode',
         'source',
         'calories',
@@ -103,39 +103,9 @@ class Food extends Model
     public function scopeSearch($query, string $term)
     {
         return $query->where(function ($q) use ($term) {
-            $q->where('name', 'like', "%{$term}%")
-              ->orWhere('arabic_name', 'like', "%{$term}%")
-              ->orWhere('english_name', 'like', "%{$term}%");
+            $q->whereRaw('JSON_EXTRACT(name, "$.ar") LIKE ?', ["%{$term}%"])
+              ->orWhereRaw('JSON_EXTRACT(name, "$.en") LIKE ?', ["%{$term}%"]);
         });
     }
 
-    // ==================== Helper Methods ====================
-
-    public function getLocalizedName(string $locale = 'ar'): string
-    {
-        return $locale === 'en'
-            ? ($this->english_name ?? $this->name)
-            : ($this->arabic_name ?? $this->name);
-    }
-
-    public function getLocalizedCategory(string $locale = 'ar'): string
-    {
-        return $locale === 'en'
-            ? ($this->en_category ?? $this->category)
-            : ($this->ar_category ?? $this->category);
-    }
-
-    public function calculateNutritionForGrams(float $grams): array
-    {
-        $multiplier = $grams / 100;
-
-        return [
-            'calories' => round($this->calories * $multiplier, 2),
-            'protein' => round($this->protein * $multiplier, 2),
-            'carbs' => round($this->carbs * $multiplier, 2),
-            'fats' => round($this->fats * $multiplier, 2),
-            'fiber' => round($this->fiber * $multiplier, 2),
-            'sugar' => round($this->sugar * $multiplier, 2),
-        ];
-    }
 }

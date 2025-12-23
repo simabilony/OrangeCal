@@ -49,7 +49,7 @@ class MealIngredient extends Model
     public function calculateNutrition(): void
     {
         if ($this->food && $this->grams) {
-            $nutrition = $this->food->calculateNutritionForGrams($this->grams);
+            $nutrition = $this->food->calculateNutritionForGrams((float) $this->grams);
 
             $this->calories = $nutrition['calories'];
             $this->protein = $nutrition['protein'];
