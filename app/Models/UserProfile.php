@@ -1,0 +1,87 @@
+<?php
+// app/Models/UserProfile.php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class UserProfile extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'user_id',
+        'gender',
+        'birth_date',
+        'age',
+        'height',
+        'weight',
+        'target_weight',
+        'bmi',
+        'goal',
+        'activity_level',
+        'daily_calories',
+        'daily_protein',
+        'daily_carbs',
+        'daily_fats',
+        'daily_water',
+        'dietary_preferences',
+        'allergies',
+        'health_conditions',
+        'preferred_language',
+        'timezone',
+        'notifications_enabled',
+    ];
+
+    protected $casts = [
+        'birth_date' => 'date',
+        'height' => 'decimal:2',
+        'weight' => 'decimal:2',
+        'target_weight' => 'decimal:2',
+        'bmi' => 'decimal:2',
+        'notifications_enabled' => 'boolean',
+    ];
+
+    // ==================== العلاقات ====================
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    // ==================== Helper Methods ====================
+
+    public function calculateBMI(): float
+    {
+        if ($this->height && $this->weight) {
+            $heightInMeters = $this->height / 100;
+            return round($this->weight / ($heightInMeters * $heightInMeters), 2);
+        }
+        return 0;
+    }
+
+    public function updateBMI(): void
+    {
+        $this->bmi = $this->calculateBMI();
+        $this->save();
+    }
+
+    public function calculateAge(): int
+    {
+        return $this->birth_date ? $this->birth_date->age : 0;
+    }
+
+    public function getWeightToLose(): float
+    {
+        if ($this->weight && $this->target_weight) {
+            return $this->weight - $this->target_weight;
+        }
+        return 0;
+    }
+
+    public function getRemainingCalories(float $consumed): float
+    {
+        return max(0, ($this->daily_calories ?? 0) - $consumed);
+    }
+}
