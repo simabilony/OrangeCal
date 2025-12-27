@@ -28,12 +28,10 @@ return new class extends Migration
             $table->decimal('carbs', 8, 2)->default(0);
             $table->decimal('fats', 8, 2)->default(0);
 
-            // ملاحظات
             $table->text('notes')->nullable();                // ملاحظات إضافية
 
             $table->timestamps();
 
-            // فهرس مركب
             $table->index(['user_meal_id', 'food_id']);
         });
     }

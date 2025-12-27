@@ -12,24 +12,18 @@ return new class extends Migration
     {
         Schema::create('user_profiles', function (Blueprint $table) {
             $table->id();
-
-            // الربط بالمستخدم
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->enum('gender', ['male', 'female'])->nullable();
+            $table->date('birth_date')->nullable();
+            $table->integer('age')->nullable();
 
-            // البيانات الشخصية
-            $table->enum('gender', ['male', 'female'])->nullable(); // الجنس
-            $table->date('birth_date')->nullable();                  // تاريخ الميلاد
-            $table->integer('age')->nullable();                      // العمر
-
-            // القياسات الجسدية
-            $table->decimal('height', 5, 2)->nullable();      // الطول بالسنتيمتر
-            $table->decimal('weight', 5, 2)->nullable();      // الوزن بالكيلوجرام
-            $table->decimal('target_weight', 5, 2)->nullable(); // الوزن المستهدف
+            $table->decimal('height', 5, 2)->nullable();
+            $table->decimal('weight', 5, 2)->nullable();
+            $table->decimal('target_weight', 5, 2)->nullable();
             $table->decimal('bmi', 4, 2)->nullable();         // مؤشر كتلة الجسم
 
-            // الأهداف والنشاط - TEXT للترجمة
             $table->text('goal')->nullable();                 // الهدف (إنقاص/زيادة/ثبات)
-            $table->text('activity_level')->nullable();       // مستوى النشاط
+            $table->text('activity_level')->nullable();
 
             // السعرات والماكروز اليومية
             $table->integer('daily_calories')->nullable();    // السعرات اليومية المستهدفة
@@ -43,14 +37,11 @@ return new class extends Migration
             $table->text('allergies')->nullable();            // الحساسيات الغذائية
             $table->text('health_conditions')->nullable();    // الحالات الصحية
 
-            // إعدادات إضافية
             $table->string('preferred_language', 5)->default('ar'); // اللغة المفضلة
-            $table->string('timezone')->default('Asia/Riyadh');     // المنطقة الزمنية
-            $table->boolean('notifications_enabled')->default(true); // تفعيل الإشعارات
+            $table->string('timezone')->default('Asia/Riyadh');
+            $table->boolean('notifications_enabled')->default(true);
 
             $table->timestamps();
-
-            // فهرس فريد لضمان ملف شخصي واحد لكل مستخدم
             $table->unique('user_id');
         });
     }

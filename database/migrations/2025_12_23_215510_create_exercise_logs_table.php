@@ -15,7 +15,6 @@ return new class extends Migration
 
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
-            // نوع التمرين - TEXT للترجمة
             $table->text('type');                             // نوع التمرين
             $table->text('description')->nullable();          // وصف التمرين
 
@@ -48,7 +47,7 @@ return new class extends Migration
             // فهارس
             $table->index(['user_id', 'log_date']);
             $table->index('log_date');
-        
+
         });
     }
 

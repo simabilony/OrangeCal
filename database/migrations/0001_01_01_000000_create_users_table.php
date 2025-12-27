@@ -12,35 +12,26 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            // المفتاح الأساسي
             $table->id();
-
-            // بيانات المصادقة - طرق تسجيل الدخول المتعددة
-            $table->string('google_id')->nullable()->unique(); // معرف جوجل
-            $table->string('apple_id')->nullable()->unique();  // معرف أبل
-            $table->string('mobile_id')->nullable()->unique(); // معرف الجوال
-
-            // البيانات الأساسية - TEXT للحقول القابلة للترجمة
-            $table->text('name')->nullable();           // الاسم (عربي/إنجليزي)
+            $table->string('google_id')->nullable()->unique();
+            $table->string('apple_id')->nullable()->unique();
+            $table->string('mobile_id')->nullable()->unique();
+            $table->text('name')->nullable();
             $table->string('email')->nullable()->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password')->nullable();     // كلمة المرور (اختياري للتسجيل الاجتماعي)
+            $table->string('password')->nullable();
+            $table->string('fcm_token')->nullable();
+            $table->string('device_type')->nullable();
+            $table->string('device_id')->nullable();
 
-            // بيانات الجهاز والإشعارات
-            $table->string('fcm_token')->nullable();    // رمز Firebase للإشعارات
-            $table->string('device_type')->nullable();  // نوع الجهاز (ios/android)
-            $table->string('device_id')->nullable();    // معرف الجهاز
-
-            // حالة الحساب
-            $table->boolean('is_active')->default(true);      // هل الحساب نشط
-            $table->boolean('is_onboarded')->default(false);  // هل أكمل التسجيل
-            $table->boolean('is_premium')->default(false);    // هل مشترك مدفوع
+            $table->boolean('is_active')->default(true);
+            $table->boolean('is_onboarded')->default(false);
+            $table->boolean('is_premium')->default(false);
 
             $table->rememberToken();
             $table->timestamps();
-            $table->softDeletes(); // الحذف الناعم
+            $table->softDeletes();
 
-            // الفهارس للبحث السريع
             $table->index('is_active');
             $table->index('is_premium');
             $table->index('created_at');

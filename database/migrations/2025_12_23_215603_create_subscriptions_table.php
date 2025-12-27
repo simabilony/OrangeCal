@@ -15,7 +15,6 @@ return new class extends Migration
 
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
-            // نوع الاشتراك - TEXT للترجمة
             $table->text('plan_name');                        // اسم الخطة
 
             // نوع الخطة
@@ -46,7 +45,6 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // فهارس
             $table->index(['user_id', 'status']);
             $table->index('ends_at');
             $table->index('status');

@@ -12,8 +12,6 @@ return new class extends Migration
     {
         Schema::create('food_logs', function (Blueprint $table) {
             $table->id();
-
-            // الربط بالمستخدم
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
             // الربط بالطعام أو الوجبة (أحدهما)
@@ -23,8 +21,6 @@ return new class extends Migration
             // اسم الطعام - TEXT للترجمة (للأطعمة الممسوحة بالذكاء الاصطناعي)
             $table->text('name')->nullable();                 // اسم الطعام
 
-
-            // التاريخ والوقت
             $table->date('log_date');                         // تاريخ السجل
             $table->time('log_time')->nullable();             // وقت الأكل
             $table->text('meal_type')->nullable();            // نوع الوجبة (فطور، غداء، إلخ)
@@ -44,21 +40,19 @@ return new class extends Migration
 
             // مصدر الإدخال
             $table->enum('source', ['manual', 'barcode', 'ai_scan', 'meal', 'search'])->default('manual');
-            $table->string('barcode_scanned')->nullable();    // الباركود الممسوح
-            $table->string('image_url')->nullable();          // صورة الطعام
+            $table->string('barcode_scanned')->nullable();
+            $table->string('image_url')->nullable();
 
             // بيانات الذكاء الاصطناعي
             $table->json('ai_response')->nullable();          // استجابة الذكاء الاصطناعي
             $table->decimal('ai_confidence', 5, 2)->nullable(); // نسبة الثقة
 
-            // معلومات إضافية
             $table->boolean('is_halal')->default(true);
             $table->text('notes')->nullable();
 
             $table->timestamps();
             $table->softDeletes();
 
-            // فهارس للبحث والتقارير
             $table->index(['user_id', 'log_date']);
             $table->index('log_date');
             $table->index('source');

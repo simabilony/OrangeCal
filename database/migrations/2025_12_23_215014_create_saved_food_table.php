@@ -12,7 +12,6 @@ return new class extends Migration
     {
         Schema::create('saved_food', function (Blueprint $table) {
             $table->id();
-
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('food_id')->constrained('food')->onDelete('cascade');
 
@@ -26,7 +25,6 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // منع التكرار
             $table->unique(['user_id', 'food_id']);
         });
     }

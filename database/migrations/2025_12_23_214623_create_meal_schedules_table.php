@@ -15,13 +15,11 @@ return new class extends Migration
 
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
-            // نوع الوجبة - TEXT للترجمة
             $table->text('meal_type');              // فطور، غداء، عشاء، وجبة خفيفة
 
-            // توقيت الوجبة
-            $table->time('scheduled_time');         // الوقت المحدد
-            $table->boolean('reminder_enabled')->default(true); // تفعيل التذكير
-            $table->integer('reminder_minutes_before')->default(15); // دقائق قبل التذكير
+            $table->time('scheduled_time');
+            $table->boolean('reminder_enabled')->default(true);
+            $table->integer('reminder_minutes_before')->default(15);
 
             // السعرات المخصصة لهذه الوجبة
             $table->integer('target_calories')->nullable();
@@ -29,7 +27,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
-        
+
         });
     }
 

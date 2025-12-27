@@ -11,17 +11,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('notifications', function (Blueprint $table) {
-            $table->uuid('id')->primary();                    // معرف UUID
+            $table->uuid('id')->primary();
 
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
-            // نوع الإشعار
-            $table->string('type');                           // نوع الإشعار (class name)
+            $table->string('type');
 
             // المحتوى - TEXT للترجمة
-            $table->text('title');                            // العنوان
-            $table->text('body');                             // المحتوى
-            // البيانات الإضافية
+            $table->text('title');
+            $table->text('body');
+
             $table->json('data')->nullable();                 // بيانات إضافية
 
             // الإجراء
@@ -29,13 +28,12 @@ return new class extends Migration
             $table->string('action_value')->nullable();       // قيمة الإجراء
 
             // الحالة
-            $table->timestamp('read_at')->nullable();         // وقت القراءة
-            $table->timestamp('sent_at')->nullable();         // وقت الإرسال
+            $table->timestamp('read_at')->nullable();
+            $table->timestamp('sent_at')->nullable();
             $table->boolean('is_push_sent')->default(false);  // هل تم إرسال Push
 
             $table->timestamps();
 
-            // فهارس
             $table->index(['user_id', 'read_at']);
             $table->index(['user_id', 'created_at']);
             $table->index('type');

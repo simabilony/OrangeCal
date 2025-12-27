@@ -13,13 +13,10 @@ return new class extends Migration
         Schema::create('food', function (Blueprint $table) {
             $table->id();
 
-            // الأسماء - TEXT للترجمة والبحث
-            $table->text('name');                    // الاسم الافتراضي
-            // الوصف والتصنيف
-            $table->text('description')->nullable();  // الوصف
-            $table->text('category')->nullable();     // التصنيف (فواكه، خضروات، لحوم)
+            $table->text('name');
+            $table->text('description')->nullable();
+            $table->text('category')->nullable();
 
-            // الباركود والمصدر
             $table->string('barcode')->nullable()->unique(); // رمز الباركود
             $table->string('source')->nullable();     // مصدر البيانات (manual, api, scan)
 
@@ -34,23 +31,19 @@ return new class extends Migration
             $table->decimal('saturated_fat', 8, 2)->default(0); // الدهون المشبعة
             $table->decimal('cholesterol', 8, 2)->default(0); // الكوليسترول
 
-            // حجم الحصة
             $table->decimal('serving_size', 8, 2)->default(100); // حجم الحصة
             $table->text('serving_unit')->nullable();  // وحدة القياس (جرام، كوب، قطعة)
 
-            // معلومات إضافية
-            $table->boolean('is_halal')->default(true);       // حلال
+            $table->boolean('is_halal')->default(true);
             $table->boolean('is_vegetarian')->default(false); // نباتي
             $table->boolean('is_vegan')->default(false);      // نباتي صرف
             $table->boolean('is_gluten_free')->default(false); // خالي من الجلوتين
             $table->boolean('is_verified')->default(false);   // تم التحقق
 
-            // الصورة
             $table->string('image_url')->nullable();
 
             $table->timestamps();
 
-            // فهارس للبحث السريع
             $table->index('barcode');
             $table->index('is_verified');
 
