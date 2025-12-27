@@ -20,7 +20,7 @@ class AuthController extends Controller
     {
         $data = $request->validated();
         $result = $this->authService->authenticateGoogle([
-            'google_id' => $data['google_id'],
+//            'google_id' => $data['google_id'],
             'email' => $data['email'],
             'name' => $data['name'],
         ]);

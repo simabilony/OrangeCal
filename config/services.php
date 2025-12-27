@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'endpoint' => env('GEMINI_ENDPOINT', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'),
+    ],
+
+    'fatsecret' => [
+        'client_id' => env('FATSECRET_CLIENT_ID'),
+        'client_secret' => env('FATSECRET_CLIENT_SECRET'),
+        'scope' => env('FATSECRET_SCOPE', 'basic'),
+        'token_url' => env('FATSECRET_TOKEN_URL', 'https://oauth.fatsecret.com/connect/token'),
+        'api_base' => env('FATSECRET_API_BASE', 'https://platform.fatsecret.com/rest'),
+    ],
+
 ];

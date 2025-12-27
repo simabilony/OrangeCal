@@ -22,7 +22,7 @@ class MealSchedule extends Model
     ];
 
     protected $casts = [
-        'scheduled_time' => 'datetime:H:i',
+        'scheduled_time' => 'datetime',
         'reminder_enabled' => 'boolean',
         'is_active' => 'boolean',
     ];

@@ -18,6 +18,7 @@ class UserProfile extends Model
         'height',
         'weight',
         'target_weight',
+        'weekly_target',
         'bmi',
         'goal',
         'activity_level',
@@ -32,6 +33,9 @@ class UserProfile extends Model
         'preferred_language',
         'timezone',
         'notifications_enabled',
+        'tdee_goal',
+        'tried_another_app',
+        'hearing_about_us',
     ];
 
     protected $casts = [
@@ -39,8 +43,13 @@ class UserProfile extends Model
         'height' => 'decimal:2',
         'weight' => 'decimal:2',
         'target_weight' => 'decimal:2',
+        'weekly_target' => 'decimal:2',
         'bmi' => 'decimal:2',
         'notifications_enabled' => 'boolean',
+        'tried_another_app' => 'boolean',
+        'dietary_preferences' => 'array',
+        'allergies' => 'array',
+        'health_conditions' => 'array',
     ];
 
     // ==================== العلاقات ====================

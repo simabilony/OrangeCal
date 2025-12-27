@@ -14,23 +14,18 @@ class AuthService
      */
     public function authenticateGoogle(array $data): array
     {
-        $user = User::where('google_id', $data['google_id'])->first();
+       // $user = User::where('google_id', $data['google_id'])->first();
 
-        if (!$user) {
             $user = User::where('email', $data['email'])->first();
-            
-            if ($user) {
-                $user->update(['google_id' => $data['google_id']]);
-            } else {
+
                 $user = User::create([
-                    'google_id' => $data['google_id'],
+//                    'google_id' => $data['google_id'],
                     'name' => $data['name'],
                     'email' => $data['email'],
                     'password' => Hash::make(Str::random(32)),
                     'is_active' => true,
                 ]);
-            }
-        }
+
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
@@ -49,7 +44,7 @@ class AuthService
 
         if (!$user) {
             $user = User::where('email', $data['email'])->first();
-            
+
             if ($user) {
                 $user->update(['apple_id' => $data['apple_id']]);
             } else {
@@ -120,4 +115,9 @@ class AuthService
         ];
     }
 }
+
+
+
+
+
 

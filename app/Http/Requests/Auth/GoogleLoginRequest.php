@@ -16,8 +16,9 @@ class GoogleLoginRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'googleId' => ['required', 'string'],
-            'email' => ['required', 'email'],
+            'googleId' => ['nullable', 'string'],
+            'email' => ['required', 'email','unique:users,email'],
+            'password' => 'required|string|min:6|confirmed',
             'name' => ['required', 'string', 'max:255'],
             'fcmToken' => ['nullable', 'string'],
             'deviceType' => ['nullable', 'string', Rule::in(['ios', 'android', 'web'])],
@@ -26,4 +27,9 @@ class GoogleLoginRequest extends BaseFormRequest
     }
 
 }
+
+
+
+
+
 

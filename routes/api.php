@@ -45,7 +45,7 @@ Route::middleware([LocaleMiddleware::class])->group(function () {
         Route::get('/user/stats', [UserController::class, 'getStats']);
 
         // Food & Meals endpoints
-        Route::get('/food-db', [FoodController::class, 'searchFoods']);
+        Route::get('/food-db', [FoodController::class, 'searchFoods']);// required
         Route::get('/food-db-id/{id}', [FoodController::class, 'getFoodById']);
         Route::post('/barcode', [FoodController::class, 'scanBarcode']);
         Route::post('/label', [FoodController::class, 'scanLabel']);
@@ -53,7 +53,7 @@ Route::middleware([LocaleMiddleware::class])->group(function () {
 
         // User meals
         Route::get('/user-meals', [MealController::class, 'getUserMeals']);
-        Route::post('/new-meal', [MealController::class, 'createMeal']);
+        Route::post('/new-meal', [MealController::class, 'createMeal']);// required
         Route::put('/user-meals/{id}', [MealController::class, 'updateMeal']);
         Route::delete('/user-meals/{id}', [MealController::class, 'deleteMeal']);
 
