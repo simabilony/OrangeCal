@@ -32,71 +32,26 @@ class MealController extends Controller
         $data = $request->validated();
         $user = $request->user();
 
-        // Handle image upload
-        $imageUrl = null;
-        if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $path = $image->store('meal-images', 'public');
-            $imageUrl = Storage::url($path);
-        }
-
-        // Create meal
-        $meal = $user->meals()->create([
-            'name' => $data['name'],
-            'description' => $data['description'] ?? null,
-            'meal_type' => $data['meal_type'] ?? null,
+        // Prepare meal data
+        $mealData = array_merge($data, [
+            'user_id' => $user->id,
+            'image_url' => $this->handleImageUpload($request),
             'servings' => $data['servings'] ?? 1,
-            'prep_time' => $data['prep_time'] ?? null,
-            'instructions' => $data['instructions'] ?? null,
-            'image_url' => $imageUrl,
             'is_favorite' => $data['is_favorite'] ?? false,
             'is_public' => $data['is_public'] ?? false,
         ]);
 
-        // Create ingredients and calculate totals
-        $totalCalories = 0;
-        $totalProtein = 0;
-        $totalCarbs = 0;
-        $totalFats = 0;
+        // Remove ingredients from meal data (will be handled separately)
+        $ingredients = $mealData['ingredients'] ?? [];
+        unset($mealData['ingredients']);
 
-        foreach ($data['ingredients'] as $ingredientData) {
-            if (!isset($ingredientData['food_id'])) {
-                throw ValidationException::withMessages([
-                    'ingredients' => ['Each ingredient must have a food_id.'],
-                ]);
-            }
+        // Create meal
+        $meal = UserMeal::create($mealData);
 
-            $food = \App\Models\Food::findOrFail($ingredientData['food_id']);
-            $grams = $ingredientData['grams'] ?? ($ingredientData['quantity'] * 100);
-            $nutrition = $food->calculateNutritionForGrams($grams, 100);
+        // Create ingredients (totals will be calculated automatically via model events)
+        $this->createIngredients($meal, $ingredients);
 
-            MealIngredient::create([
-                'user_meal_id' => $meal->id,
-                'food_id' => $food->id,
-                'quantity' => $ingredientData['quantity'],
-                'unit' => $ingredientData['unit'],
-                'grams' => $grams,
-                'calories' => $nutrition['calories'],
-                'protein' => $nutrition['protein'],
-                'carbs' => $nutrition['carbs'],
-                'fats' => $nutrition['fats'],
-                'notes' => $ingredientData['notes'] ?? null,
-            ]);
-
-            $totalCalories += $nutrition['calories'];
-            $totalProtein += $nutrition['protein'];
-            $totalCarbs += $nutrition['carbs'];
-            $totalFats += $nutrition['fats'];
-        }
-
-        $meal->update([
-            'total_calories' => $totalCalories,
-            'total_protein' => $totalProtein,
-            'total_carbs' => $totalCarbs,
-            'total_fats' => $totalFats,
-        ]);
-
-        return new MealResource($meal->load('ingredients.food'));
+        return new MealResource($meal->fresh()->load('ingredients.food'));
     }
 
     public function updateMeal(UpdateMealRequest $request, int $id): MealResource
@@ -105,67 +60,23 @@ class MealController extends Controller
         $user = $request->user();
         $meal = $user->meals()->findOrFail($id);
 
-
+        // Handle image upload
         if ($request->hasFile('image')) {
-
-            if ($meal->image_url) {
-                Storage::disk('public')->delete(str_replace('/storage/', '', $meal->image_url));
-            }
-
-            $image = $request->file('image');
-            $path = $image->store('meal-images', 'public');
-            $data['image_url'] = Storage::url($path);
+            $this->deleteImage($meal->image_url);
+            $data['image_url'] = $this->handleImageUpload($request);
         }
 
+        // Extract ingredients if provided
+        $ingredients = $data['ingredients'] ?? null;
+        unset($data['ingredients']);
 
+        // Update meal
         $meal->update($data);
 
-
-        if (isset($data['ingredients'])) {
+        // Update ingredients if provided (totals will be recalculated automatically)
+        if ($ingredients !== null) {
             $meal->ingredients()->delete();
-
-            $totalCalories = 0;
-            $totalProtein = 0;
-            $totalCarbs = 0;
-            $totalFats = 0;
-
-            foreach ($data['ingredients'] as $ingredientData) {
-               
-                if (!isset($ingredientData['food_id'])) {
-                    throw ValidationException::withMessages([
-                        'ingredients' => ['Each ingredient must have a food_id.'],
-                    ]);
-                }
-
-                $food = \App\Models\Food::findOrFail($ingredientData['food_id']);
-                $grams = $ingredientData['grams'] ?? ($ingredientData['quantity'] * 100);
-                $nutrition = $food->calculateNutritionForGrams($grams, 100);
-
-                MealIngredient::create([
-                    'user_meal_id' => $meal->id,
-                    'food_id' => $food->id,
-                    'quantity' => $ingredientData['quantity'],
-                    'unit' => $ingredientData['unit'],
-                    'grams' => $grams,
-                    'calories' => $nutrition['calories'],
-                    'protein' => $nutrition['protein'],
-                    'carbs' => $nutrition['carbs'],
-                    'fats' => $nutrition['fats'],
-                    'notes' => $ingredientData['notes'] ?? null,
-                ]);
-
-                $totalCalories += $nutrition['calories'];
-                $totalProtein += $nutrition['protein'];
-                $totalCarbs += $nutrition['carbs'];
-                $totalFats += $nutrition['fats'];
-            }
-
-            $meal->update([
-                'total_calories' => $totalCalories,
-                'total_protein' => $totalProtein,
-                'total_carbs' => $totalCarbs,
-                'total_fats' => $totalFats,
-            ]);
+            $this->createIngredients($meal, $ingredients);
         }
 
         return new MealResource($meal->fresh()->load('ingredients.food'));
@@ -176,13 +87,59 @@ class MealController extends Controller
         $user = $request->user();
         $meal = $user->meals()->findOrFail($id);
 
-        if ($meal->image_url) {
-            Storage::disk('public')->delete(str_replace('/storage/', '', $meal->image_url));
-        }
-
+        $this->deleteImage($meal->image_url);
         $meal->delete();
 
         return response()->json(['message' => 'Meal deleted successfully']);
+    }
+
+    /**
+     * Handle image upload and return the image URL.
+     */
+    protected function handleImageUpload(Request $request): ?string
+    {
+        if (!$request->hasFile('image')) {
+            return null;
+        }
+
+        $path = $request->file('image')->store('meal-images', 'public');
+        return Storage::url($path);
+    }
+
+    /**
+     * Delete image from storage.
+     */
+    protected function deleteImage(?string $imageUrl): void
+    {
+        if ($imageUrl) {
+            Storage::disk('public')->delete(str_replace('/storage/', '', $imageUrl));
+        }
+    }
+
+    /**
+     * Create meal ingredients.
+     * Nutrition values and totals are calculated automatically via model events.
+     */
+    protected function createIngredients(UserMeal $meal, array $ingredients): void
+    {
+        foreach ($ingredients as $ingredientData) {
+            if (!isset($ingredientData['food_id'])) {
+                throw ValidationException::withMessages([
+                    'ingredients' => ['Each ingredient must have a food_id.'],
+                ]);
+            }
+
+            $grams = $ingredientData['grams'] ?? ($ingredientData['quantity'] * 100);
+
+            MealIngredient::create([
+                'user_meal_id' => $meal->id,
+                'food_id' => $ingredientData['food_id'],
+                'quantity' => $ingredientData['quantity'],
+                'unit' => $ingredientData['unit'],
+                'grams' => $grams,
+                'notes' => $ingredientData['notes'] ?? null,
+            ]);
+        }
     }
 }
 
