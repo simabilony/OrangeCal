@@ -31,7 +31,7 @@ Route::middleware([LocaleMiddleware::class])->group(function () {
         Route::post('/apple', [AuthController::class, 'appleLogin']);
         Route::post('/mobile', [AuthController::class, 'mobileLogin']);
     });
-    
+
     Route::get('/food-db', [FoodController::class, 'searchFoods']);// required
     Route::get('/food-db-id/{id}', [FoodController::class, 'getFoodById']);
     Route::post('/barcode', [FoodController::class, 'scanBarcode']);

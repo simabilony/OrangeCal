@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class MealController extends Controller
 {
@@ -59,6 +60,12 @@ class MealController extends Controller
         $totalFats = 0;
 
         foreach ($data['ingredients'] as $ingredientData) {
+            if (!isset($ingredientData['food_id'])) {
+                throw ValidationException::withMessages([
+                    'ingredients' => ['Each ingredient must have a food_id.'],
+                ]);
+            }
+
             $food = \App\Models\Food::findOrFail($ingredientData['food_id']);
             $grams = $ingredientData['grams'] ?? ($ingredientData['quantity'] * 100);
             $nutrition = $food->calculateNutritionForGrams($grams, 100);
@@ -98,9 +105,9 @@ class MealController extends Controller
         $user = $request->user();
         $meal = $user->meals()->findOrFail($id);
 
-        // Handle image upload
+
         if ($request->hasFile('image')) {
-            // Delete old image
+
             if ($meal->image_url) {
                 Storage::disk('public')->delete(str_replace('/storage/', '', $meal->image_url));
             }
@@ -110,10 +117,10 @@ class MealController extends Controller
             $data['image_url'] = Storage::url($path);
         }
 
-        // Update meal
+
         $meal->update($data);
 
-        // Update ingredients if provided
+
         if (isset($data['ingredients'])) {
             $meal->ingredients()->delete();
 
@@ -123,6 +130,13 @@ class MealController extends Controller
             $totalFats = 0;
 
             foreach ($data['ingredients'] as $ingredientData) {
+               
+                if (!isset($ingredientData['food_id'])) {
+                    throw ValidationException::withMessages([
+                        'ingredients' => ['Each ingredient must have a food_id.'],
+                    ]);
+                }
+
                 $food = \App\Models\Food::findOrFail($ingredientData['food_id']);
                 $grams = $ingredientData['grams'] ?? ($ingredientData['quantity'] * 100);
                 $nutrition = $food->calculateNutritionForGrams($grams, 100);
