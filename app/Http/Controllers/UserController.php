@@ -10,6 +10,7 @@ use App\Models\UserProfile;
 use App\Models\MealSchedule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -21,6 +22,17 @@ class UserController extends Controller
         // Update user fields
         $userUpdates = [];
         if (isset($data['mobile_id'])) {
+            // Check if mobile_id is already taken by another user
+            $existingUser = User::where('mobile_id', $data['mobile_id'])
+                ->where('id', '!=', $user->id)
+                ->first();
+
+            if ($existingUser) {
+                throw ValidationException::withMessages([
+                    'mobile_id' => ['This mobile ID is already in use by another user.'],
+                ]);
+            }
+
             $userUpdates['mobile_id'] = $data['mobile_id'];
         }
         if (isset($data['firebase_token'])) {

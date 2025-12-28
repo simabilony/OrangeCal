@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Auth\GoogleLoginRequest;
+use App\Http\Requests\Auth\GoogleLoginOnlyRequest;
 use App\Http\Requests\Auth\AppleLoginRequest;
 use App\Http\Requests\Auth\MobileLoginRequest;
 use App\Http\Resources\UserResource;
@@ -23,6 +24,7 @@ class AuthController extends Controller
 //            'google_id' => $data['google_id'],
             'email' => $data['email'],
             'name' => $data['name'],
+            'password' => $data['password'],
         ]);
 
         if (isset($data['fcm_token'])) {
@@ -84,6 +86,48 @@ class AuthController extends Controller
         $result = $this->authService->refreshToken($request->user());
 
         return response()->json(['token' => $result['token']]);
+    }
+
+    /**
+     * Google Login (Login Only)
+     *
+     * Authenticate an existing user with Google credentials (email and password).
+     * This endpoint is for login only and will not create a new user.
+     *
+     * @operationId googleLoginOnly
+     * @tags Authentication
+     * @bodyContent \App\Http\Requests\Auth\GoogleLoginOnlyRequest
+     * @response 200 {
+     *   "user": {
+     *     "id": 1,
+     *     "name": "John Doe",
+     *     "email": "john@example.com"
+     *   },
+     *   "token": "1|xxxxxxxxxxxxx"
+     * }
+     * @response 422 {
+     *   "message": "The given data was invalid.",
+     *   "errors": {
+     *     "email": ["The provided credentials do not match our records."]
+     *   }
+     * }
+     */
+    public function googleLoginOnly(GoogleLoginOnlyRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+        $result = $this->authService->loginGoogle([
+            'email' => $data['email'],
+            'password' => $data['password'],
+        ]);
+
+        if (isset($data['fcm_token'])) {
+            $result['user']->update(['fcm_token' => $data['fcm_token']]);
+        }
+
+        return response()->json([
+            'user' => new UserResource($result['user']->load('profile')),
+            'token' => $result['token'],
+        ]);
     }
 }
 

@@ -5,27 +5,73 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthService
 {
     /**
-     * Authenticate or create user via Google.
+     * Authenticate or create user via Google (Register/Login).
      */
     public function authenticateGoogle(array $data): array
     {
-       // $user = User::where('google_id', $data['google_id'])->first();
+        // Check if user exists
+        $user = User::where('email', $data['email'])->first();
 
-            $user = User::where('email', $data['email'])->first();
-
-                $user = User::create([
-//                    'google_id' => $data['google_id'],
-                    'name' => $data['name'],
-                    'email' => $data['email'],
-                    'password' => Hash::make(Str::random(32)),
-                    'is_active' => true,
+        if ($user) {
+            // User exists - verify password for login
+            if (isset($data['password']) && !Hash::check($data['password'], $user->password)) {
+                throw ValidationException::withMessages([
+                    'password' => ['The provided credentials do not match our records.'],
                 ]);
+            }
 
+            // Update name if provided
+            if (isset($data['name'])) {
+                $user->update(['name' => $data['name']]);
+            }
+        } else {
+            // User doesn't exist - create new user (register)
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password'] ?? Str::random(32)),
+                'is_active' => true,
+            ]);
+        }
+
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        return [
+            'user' => $user->load('profile'),
+            'token' => $token,
+        ];
+    }
+
+    /**
+     * Login user with email and password (Google login only - no registration).
+     */
+    public function loginGoogle(array $data): array
+    {
+        $user = User::where('email', $data['email'])->first();
+
+        if (!$user) {
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials do not match our records.'],
+            ]);
+        }
+
+        if (!Hash::check($data['password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'password' => ['The provided credentials do not match our records.'],
+            ]);
+        }
+
+        if (!$user->is_active) {
+            throw ValidationException::withMessages([
+                'email' => ['Your account has been deactivated.'],
+            ]);
+        }
 
         $token = $user->createToken('auth-token')->plainTextToken;
 

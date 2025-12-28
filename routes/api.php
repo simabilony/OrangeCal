@@ -27,9 +27,16 @@ Route::middleware([LocaleMiddleware::class])->group(function () {
     // Public routes (no authentication required)
     Route::prefix('auth')->group(function () {
         Route::post('/google', [AuthController::class, 'googleLogin']);
+        Route::post('/google/login', [AuthController::class, 'googleLoginOnly']);
         Route::post('/apple', [AuthController::class, 'appleLogin']);
         Route::post('/mobile', [AuthController::class, 'mobileLogin']);
     });
+    
+    Route::get('/food-db', [FoodController::class, 'searchFoods']);// required
+    Route::get('/food-db-id/{id}', [FoodController::class, 'getFoodById']);
+    Route::post('/barcode', [FoodController::class, 'scanBarcode']);
+    Route::post('/label', [FoodController::class, 'scanLabel']);
+    Route::post('/analyze-food', [FoodController::class, 'analyzeFood']);
 
     // Protected routes (require authentication)
     Route::middleware('auth:sanctum')->group(function () {
@@ -45,11 +52,7 @@ Route::middleware([LocaleMiddleware::class])->group(function () {
         Route::get('/user/stats', [UserController::class, 'getStats']);
 
         // Food & Meals endpoints
-        Route::get('/food-db', [FoodController::class, 'searchFoods']);// required
-        Route::get('/food-db-id/{id}', [FoodController::class, 'getFoodById']);
-        Route::post('/barcode', [FoodController::class, 'scanBarcode']);
-        Route::post('/label', [FoodController::class, 'scanLabel']);
-        Route::post('/analyze-food', [FoodController::class, 'analyzeFood']);
+
 
         // User meals
         Route::get('/user-meals', [MealController::class, 'getUserMeals']);
